@@ -106,6 +106,19 @@ async function getJobsByUserId(userId) {
     throw new Error("Error in getJobsByUserId function");
   }
 }
+// Get created jobs by user ID
+async function getCreatedJobs(userId) {
+    try {
+      // Query the database to find jobs posted by the specified user ID
+      const createdJobs = await Job.find({ postedBy: userId });
+  
+      return createdJobs;
+    } catch (error) {
+      throw new Error("Error in getCreatedJobs function");
+    }
+  }
+
+  
 module.exports = {
   getAllJobs,
   getJobById,
@@ -114,4 +127,5 @@ module.exports = {
   updateJob,
   deleteJob,
   getJobsByUserId,
+  getCreatedJobs,
 };

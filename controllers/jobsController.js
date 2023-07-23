@@ -66,9 +66,9 @@ async function createJob(req, res) {
       logo,
       postedBy: req.user._id, // Assign the authenticated user's ID to postedBy
     });
-    if (req.file) {
-      Job.logo = req.file.path; // Save the file path to the user's cv field
-    }
+    // if (req.file) {
+    //   data.logo = req.file.path; // Save the file path to the user's logo field
+    // }
 
     // Add user in the database
     const createdJob = await newJob.save();
@@ -423,6 +423,31 @@ async function getAppliedUsers(req, res) {
     res.status(500).json({ error: "Internal server error in getJobsByUserId" });
   }
 }
+async function getApplicants(req, res) {
+  try {
+    // Get the logged-in user's ID from req.user
+    const userId = req.user._id;
+
+    // Fetch the list of created jobs for the logged-in user
+    const createdJobs = await jobsService.getCreatedJobs(userId);
+
+    // Extract the applicant details for each job
+    const applicantsByJob = createdJobs.map((job) =>
+      job.appliedBy.map((user) => user._id)
+    );
+
+    // Flatten the array of arrays to get a single array of unique user IDs
+    const uniqueUserIds = [...new Set(applicantsByJob.flat())];
+
+    // Fetch the user details for the unique user IDs
+    const appliedUsers = await User.find({ _id: { $in: uniqueUserIds } });
+
+    res.json({ success: true, count: appliedUsers.length, data: appliedUsers });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error in getApplicants" });
+  }
+}
 
 module.exports = {
   bookmarkJob,
@@ -439,4 +464,5 @@ module.exports = {
   withdrawAppliedJob,
   getJobsByUserId,
   getAppliedUsers,
+  getApplicants,
 };
