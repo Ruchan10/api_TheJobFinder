@@ -25,10 +25,15 @@ const authMiddleware = require("./middlewares/authMiddleware.js");
 const authRoutes = require("./routes/authRoutes");
 const jobsRoutes = require("./routes/jobsRoutes");
 const usersRoutes = require("./routes/usersRoutes");
+const searchRoutes = require("./routes/searchRoutes");
+const fileController = require("./controllers/fileController");
+const searchController = require("./controllers/searchController");
 
 app.use("/auth", authRoutes);
 app.use("/jobs", jobsRoutes);
-app.use("/users",authMiddleware, usersRoutes);
+app.use("/controllers", fileController);
+app.use("/users", authMiddleware, usersRoutes);
+app.use("/search", searchRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

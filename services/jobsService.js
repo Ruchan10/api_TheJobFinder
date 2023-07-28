@@ -117,7 +117,25 @@ async function getCreatedJobs(userId) {
       throw new Error("Error in getCreatedJobs function");
     }
   }
-
+  async function deleteJobApplication(jobId, userId) {
+    try {
+      // Find the job by its ID and remove the user from the appliedBy array
+      const job = await Job.findById(jobId);
+      if (!job) {
+        throw new Error("Job not found");
+      }
+  
+      // Remove the user from the appliedBy array based on their user ID
+      job.appliedBy = job.appliedBy.filter((user) => user.toString() !== userId);
+  
+      // Save the updated job to the database
+      const updatedJob = await job.save();
+  
+      return updatedJob;
+    } catch (error) {
+      throw new Error("Error deleting job application");
+    }
+  }
   
 module.exports = {
   getAllJobs,
@@ -128,4 +146,5 @@ module.exports = {
   deleteJob,
   getJobsByUserId,
   getCreatedJobs,
+  deleteJobApplication,
 };

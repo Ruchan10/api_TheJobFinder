@@ -4,6 +4,7 @@ const express = require("express");
 
 // Get user details
 async function getUserDetails(req, res) {
+  console.log("in userDetails");
   try {
     // Get the authenticated user's ID from the req.user object
     const userId = req.user._id;
@@ -16,11 +17,13 @@ async function getUserDetails(req, res) {
     }
 
     // Return the user details
-    res.json(user);
+    console.log(user.profile);
+    res.json({ data: user, profile: user.profile });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error in usersController" });
   }
+  console.log("OUT userDetails");
 }
 
 // Update user information
@@ -108,18 +111,23 @@ async function getUserByEmail(req, res) {
   }
 }
 
-
-
-
-
 async function editProfile(req, res) {
+  console.log("IN the editProfile Function");
+  console.log(req.files);
   try {
-    // Check if user is authenticated
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized Access" });
+    // const profile = req.file ? req.file.path : null;
+
+    // console.log(profile);
+    // console.log(req.file);
+    // Check if the profile image and cv files were uploaded
+    if (!req.files || !req.files.profile || !req.files.cv) {
+      return res
+        .status(400)
+        .json({ message: "Both profile and cv files are required." });
     }
+
     // Get the updated profile information from the request body
-    const { phoneNumber, fullName, email } = req.body;
+    const { phoneNumber, fullName } = req.body;
 
     // Find the user by ID
     const user = await User.findById(req.user._id);
@@ -130,11 +138,10 @@ async function editProfile(req, res) {
     // Update the user's profile information
     user.phoneNumber = phoneNumber;
     user.fullName = fullName;
-    user.email = email;
-    // Check if a file was uploaded
-    if (req.file) {
-      user.cv = req.file.path; // Save the file path to the user's cv field
-    }
+    // user.email = email;
+    // Save the file paths to the user's cv and profile fields
+    user.cv = req.files.cv[0].path;
+    user.profile = req.files.profile[0].path;
     // Save the updated user profile
     const updatedUser = await user.save();
 
@@ -146,6 +153,38 @@ async function editProfile(req, res) {
       .json({ error: "Internal server error in editProfile function" });
   }
 }
+// Function to change the email of the logged-in user
+async function changeEmail(req, res) {
+  const { email, confirmEmail } = req.body;
+  // Check if the email and confirmEmail match
+  if (email !== confirmEmail) {
+    return res.status(400).json({ error: "Emails do not match" });
+  }
+  // Check if the new email is already in use by another user
+  const existingEmail = await User.findByEmail(email);
+  if (existingEmail && existingEmail._id.toString() !== userId.toString()) {
+    return res.status(409).json({ error: "Email already in use" });
+  }
+  try {
+    // Get the logged-in user's ID from req.user
+    const userId = req.user._id;
+
+    // Find the user by their ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update the email of the user
+    user.email = email;
+    await user.save();
+
+    res.json({ success: true, message: "Email changed successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
 
 module.exports = {
   getUserDetails,
@@ -153,4 +192,5 @@ module.exports = {
   deleteUser,
   getUserByEmail,
   editProfile,
+  changeEmail,
 };

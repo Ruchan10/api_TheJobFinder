@@ -11,5 +11,9 @@ router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 // Logout route
 // router.post('/logout', authMiddleware, authController.logout);
+router.get("/getUser/:id", authController.getUserDetails);
+router.get("/getImage/:imageName", authController.getImage);
+router.get("/getCv/:fileName", authController.getCv);
+router.post("/changePassword", authMiddleware, authController.changePassword);
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
+const path = require("path");
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const authController = require("../controllers/authController");
@@ -9,15 +10,30 @@ const usersController = require("../controllers/usersController");
 // Create a storage for multer to save the uploaded file
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Change this to the directory where you want to save the files
+    cb(null, "controllers/uploads/userData"); // Change this to the directory where you want to save the files
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + "-" + uniqueSuffix);
+    const fileExtension = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + fileExtension);
   },
 });
 // Create a multer middleware with the storage configuration
 const upload = multer({ storage: storage });
+
+// Create a storage for multer to save the uploaded file
+const storage0 = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "controllers/uploads/pp/"); // Directory to save the files
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const fileExtension = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + fileExtension);
+  },
+});
+
+const upload0 = multer({ storage: storage0 });
 
 // Authentication routes
 router.post("/login", authController.login);
@@ -26,9 +42,17 @@ router.post("/signup", authController.signup);
 // User profile routes
 // router.use(authMiddleware);
 // Apply authentication middleware to protect routes
-router.get("/profile", usersController.getUserDetails);
-router.patch("/profile", usersController.updateUser);
+router.get("/profile/:id", usersController.getUserDetails);
+router.patch("/profile", upload.single("profile"), usersController.updateUser);
 router.delete("/profile", usersController.deleteUser);
-router.post("/editProfile", upload.single("cv"), usersController.editProfile);
+router.post("/changeEmail", usersController.changeEmail);
+router.post(
+  "/editProfile",
+  upload.fields([
+    { name: "profile", maxCount: 1 },
+    { name: "cv", maxCount: 1 },
+  ]),
+  usersController.editProfile
+);
 
 module.exports = router;

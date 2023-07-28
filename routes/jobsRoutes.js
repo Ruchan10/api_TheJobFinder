@@ -8,7 +8,7 @@ const path = require("path");
 // Create a storage for multer to save the uploaded file
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/logos/"); // Directory to save the files
+    cb(null, "controllers/uploads/logos/"); // Directory to save the files
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -77,6 +77,11 @@ router.post("/withdraw/:id", authMiddleware, jobsController.withdrawAppliedJob);
 
 router.get("/user/:userId", authMiddleware, jobsController.getJobsByUserId);
 
-router.get('/applicants', authMiddleware, jobsController.getApplicants);
+router.get("/applicants", authMiddleware, jobsController.getApplicants);
+
+router.delete("/applicants/:jobId", authMiddleware, jobsController.removeJobId);
+router.post("/reject/:jobId/:userId", jobsController.rejectUser);
+
+router.post("/acceptedUser/:jobId/:userId", jobsController.acceptedUser);
 
 module.exports = router;

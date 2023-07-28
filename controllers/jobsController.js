@@ -66,9 +66,9 @@ async function createJob(req, res) {
       logo,
       postedBy: req.user._id, // Assign the authenticated user's ID to postedBy
     });
-    // if (req.file) {
-    //   data.logo = req.file.path; // Save the file path to the user's logo field
-    // }
+    if (req.file) {
+      Job.logo = req.file.path; // Save the file path to the user's logo field
+    }
 
     // Add user in the database
     const createdJob = await newJob.save();
@@ -376,7 +376,80 @@ async function withdrawAppliedJob(req, res) {
       .json({ error: "Internal server error in withdrawAppliedJob" });
   }
 }
+async function rejectUser(req, res) {
+  console.log("IN acceptUSer function");
+  try {
+    const jobId = req.params.jobId;
 
+    const userId = req.params.userId;
+
+    // Find the user in the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: "Job not found" });
+    }
+
+    // Remove the job from the user's appliedJobs list
+    user.appliedJobs.pull(jobId);
+    await user.save();
+
+    job.appliedBy.pull(userId);
+    await job.save();
+
+    res.json({
+      success: true,
+      data: user.appliedJobs,
+      message: "Job withdrawn successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "Internal server error in withdrawAppliedJob" });
+  }
+}
+async function acceptedUser(req, res) {
+  try {
+    console.log("In acceptedUser");
+    const jobId = req.params.jobId;
+
+    const userId = req.params.userId;
+    // Find the job by jobId
+    const job = await Job.findById(jobId);
+
+    // Check if the job exists
+    if (!job) {
+      res.json({ success: false, message: "Job not found" });
+    }
+
+    // Check if the user is already accepted for the job
+    if (job.acceptedUser.includes(userId)) {
+      return res.json({
+        success: false,
+        message: "User is already accepted for the job",
+      });
+    }
+
+    // Add the userId to the acceptedUser array
+    job.acceptedUser.push(userId);
+
+    // Save the updated job data to the database
+    await job.save();
+
+    res.json({
+      success: true,
+      data: user.appliedJobs,
+      message: "User added to accepted users for the job",
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error in accepted User" });
+  }
+}
 // Get jobs by user ID
 async function getJobsByUserId(req, res) {
   try {
@@ -432,16 +505,20 @@ async function getApplicants(req, res) {
     const createdJobs = await jobsService.getCreatedJobs(userId);
 
     // Extract the applicant details for each job
-    const applicantsByJob = createdJobs.map((job) =>
-      job.appliedBy.map((user) => user._id)
-    );
+    const applicantsByJob = createdJobs
+      .filter((job) => job.appliedBy) // Filter out jobs without the appliedBy array
+      .map((job) => job.appliedBy.map((user) => user._id));
 
     // Flatten the array of arrays to get a single array of unique user IDs
     const uniqueUserIds = [...new Set(applicantsByJob.flat())];
 
     // Fetch the user details for the unique user IDs
     const appliedUsers = await User.find({ _id: { $in: uniqueUserIds } });
-
+    appliedUsers.forEach((user) => {
+      user.appliedJobs = user.appliedJobs.filter((jobId) =>
+        createdJobs.some((job) => job._id.equals(jobId))
+      );
+    });
     res.json({ success: true, count: appliedUsers.length, data: appliedUsers });
   } catch (error) {
     console.error(error);
@@ -449,6 +526,33 @@ async function getApplicants(req, res) {
   }
 }
 
+// Function to remove a job ID from the user's appliedJobs array
+async function removeJobId(req, res) {
+  try {
+    const { jobId } = req.params;
+    const userId = req.user._id;
+
+    // Find the user by their ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Remove the job ID from the user's appliedJobs array
+    user.appliedJobs = user.appliedJobs.filter((id) => id.toString() !== jobId);
+
+    // Save the updated user data
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Job ID removed from user appliedJobs array",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error in removeJobId" });
+  }
+}
 module.exports = {
   bookmarkJob,
   unbookmarkJob,
@@ -465,4 +569,7 @@ module.exports = {
   getJobsByUserId,
   getAppliedUsers,
   getApplicants,
+  removeJobId,
+  rejectUser,
+  acceptedUser,
 };

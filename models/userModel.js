@@ -23,12 +23,16 @@ const userSchema = new mongoose.Schema({
   fullName: {
     type: String,
   },
-  phoneNumber: {
-    type: String,
-  },
   cv: {
     type: String,
   },
+  profile: {
+    type: String,
+  },
+  phoneNumber: {
+    type: String,
+  },
+
 });
 // Function to add a job to the user's applied jobs list
 userSchema.methods.addAppliedJob = function (jobId) {
