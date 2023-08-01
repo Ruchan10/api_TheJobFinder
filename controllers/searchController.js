@@ -5,6 +5,7 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const fs = require("fs");
+const router = express.Router();
 const Job = require("../models/jobModel");
 
 async function search(req, res) {
@@ -30,6 +31,44 @@ async function search(req, res) {
   }
 }
 
+async function filterCompanyName(req, res) {
+  try {
+    const { companyName, jobTitle, location, jobTime } = req.query;
+
+    // Create an empty filter object to store the search criteria
+    const filter = {};
+
+    // Add search criteria for companyName if provided
+    if (companyName) {
+      filter["company"] = { $regex: companyName, $options: "i" };
+    }
+
+    // Add search criteria for jobTitle if provided
+    if (jobTitle) {
+      filter["title"] = { $regex: jobTitle, $options: "i" };
+    }
+
+    // Add search criteria for location if provided
+    if (location) {
+      filter["location"] = { $regex: location, $options: "i" };
+    }
+
+    // Add search criteria for jobTime if provided
+    if (jobTime) {
+      filter["time"] = { $regex: jobTime, $options: "i" };
+    }
+
+    // Perform the database query with the combined filter object
+    const filteredJobs = await Job.find(filter);
+
+    res.json({ success: true, data: filteredJobs });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
   search,
+  filterCompanyName,
 };

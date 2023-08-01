@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const jobSchema = new mongoose.Schema(
   {
@@ -18,37 +18,54 @@ const jobSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    logo:{
-        type:String,
+    location: {
+      type: String,
       required: true,
-
+    },
+    logo: {
+      type: String,
+      required: true,
+    },
+    jobTime: {
+      type: String,
+      required: true,
+    },
+    salary: {
+      type: String,
+      required: true,
     },
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
-    bookmarkedBy: [{
+    bookmarkedBy: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }],
-      appliedBy: [{
+        ref: "User",
+      },
+    ],
+    appliedBy: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }],
-      acceptedUser: [{
+        ref: "User",
+      },
+    ],
+    acceptedUser: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }]
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
 
 // Add the remove function to the schema
 jobSchema.methods.remove = function () {
-    return this.deleteOne();
-  };
+  return this.deleteOne();
+};
 
-const Job = mongoose.model('Job', jobSchema);
+const Job = mongoose.model("Job", jobSchema);
 
 module.exports = Job;

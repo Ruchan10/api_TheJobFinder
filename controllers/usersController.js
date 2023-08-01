@@ -17,8 +17,8 @@ async function getUserDetails(req, res) {
     }
 
     // Return the user details
-    console.log(user.profile);
-    res.json({ data: user, profile: user.profile });
+    console.log(user.phoneNumber);
+    res.json({ success: true, count: 1, data: user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error in usersController" });

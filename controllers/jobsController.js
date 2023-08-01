@@ -55,7 +55,7 @@ async function createJob(req, res) {
       return res.status(401).json({ error: "Unauthorized Access" });
     }
 
-    const { title, desc, company, location } = req.body;
+    const { title, desc, company, location, salary, jobTime } = req.body;
     const logo = req.file ? req.file.path : null;
 
     const newJob = new Job({
@@ -64,6 +64,8 @@ async function createJob(req, res) {
       company,
       location,
       logo,
+      salary,
+      jobTime,
       postedBy: req.user._id, // Assign the authenticated user's ID to postedBy
     });
     if (req.file) {
@@ -464,7 +466,7 @@ async function getJobsByUserId(req, res) {
     }
 
     // Return the jobs associated with the user ID
-    res.json({ success: true, data: jobs });
+    res.json({ success: true, count: jobs.length, data: jobs });
   } catch (error) {
     console.error(error);
     res
