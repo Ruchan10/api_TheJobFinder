@@ -16,14 +16,15 @@ async function search(req, res) {
     // Find jobs that have the search query in any of the relevant fields
     const jobs = await Job.find({
       $or: [
-        { companyName: { $regex: searchQuery, $options: "i" } },
+        { title: { $regex: searchQuery, $options: "i" } },
+        { desc: { $regex: searchQuery, $options: "i" } },
+        { company: { $regex: searchQuery, $options: "i" } },
         { location: { $regex: searchQuery, $options: "i" } },
         { jobTime: { $regex: searchQuery, $options: "i" } },
-        { jobTitle: { $regex: searchQuery, $options: "i" } },
-        // Add more fields to search here, if needed
+        { salary: { $regex: searchQuery, $options: "i" } },
       ],
     });
-
+    console.log(jobs);
     res.json({ success: true, count: jobs.length, data: jobs });
   } catch (error) {
     console.error(error);
@@ -32,30 +33,36 @@ async function search(req, res) {
 }
 
 async function filterCompanyName(req, res) {
+  console.log("in filterCompanYName");
   try {
-    const { companyName, jobTitle, location, jobTime } = req.query;
-
+    const c = req.body.c;
+    const j = req.body.j;
+    const l = req.body.l;
+    const jo = req.body.jo;
+    console.log(c);
+    console.log(l);
+    console.log(jo);
     // Create an empty filter object to store the search criteria
     const filter = {};
 
     // Add search criteria for companyName if provided
-    if (companyName) {
-      filter["company"] = { $regex: companyName, $options: "i" };
+    if (c) {
+      filter["company"] = { $regex: c, $options: "i" };
     }
 
     // Add search criteria for jobTitle if provided
-    if (jobTitle) {
-      filter["title"] = { $regex: jobTitle, $options: "i" };
+    if (j) {
+      filter["title"] = { $regex: j, $options: "i" };
     }
 
     // Add search criteria for location if provided
-    if (location) {
-      filter["location"] = { $regex: location, $options: "i" };
+    if (l) {
+      filter["location"] = { $regex: l, $options: "i" };
     }
 
     // Add search criteria for jobTime if provided
-    if (jobTime) {
-      filter["time"] = { $regex: jobTime, $options: "i" };
+    if (jo) {
+      filter["time"] = { $regex: jo, $options: "i" };
     }
 
     // Perform the database query with the combined filter object

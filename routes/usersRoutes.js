@@ -43,9 +43,14 @@ router.post("/signup", authController.signup);
 // router.use(authMiddleware);
 // Apply authentication middleware to protect routes
 router.get("/profile/:id", usersController.getUserDetails);
+router.get("/", usersController.getAllUsers);
+
 router.patch("/profile", upload.single("profile"), usersController.updateUser);
-router.delete("/profile", usersController.deleteUser);
+router.post("/profile", usersController.deleteUser);
 router.post("/changeEmail", usersController.changeEmail);
+router.post("/addNoti/:notif", usersController.addNotification);
+router.get("/getNoti", usersController.getNotifications);
+router.post("/clearNoti", usersController.clearNotifications);
 router.post(
   "/editProfile",
   upload.fields([

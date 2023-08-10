@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const multer = require("multer");
 const express = require("express");
+const bcrypt = require("bcrypt");
 
 // Get user details
 async function getUserDetails(req, res) {
@@ -68,7 +69,7 @@ async function updateUser(req, res) {
 // Delete user account
 async function deleteUser(req, res) {
   try {
-    // Get the authenticated user's ID from the req.user object
+    const { password } = req.body;
     const userId = req.user._id;
 
     // Find the user in the database
@@ -78,9 +79,10 @@ async function deleteUser(req, res) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if the authenticated user is the owner of the account
-    if (userId.toString() !== user._id.toString()) {
-      return res.status(403).json({ error: "Unauthorized access" });
+    // Check if the provided password matches the current user's password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid password" });
     }
 
     // Delete the user from the database
@@ -185,7 +187,97 @@ async function changeEmail(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+// Controller function to fetch all users
+async function getAllUsers(req, res) {
+  try {
+    // Fetch all users from the database
+    const users = await User.find();
 
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+async function addNotification(req, res) {
+  console.log("IN ADDNOti");
+  try {
+    const notif = req.params.notif;
+    const userId = req.user._id;
+
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized Access" });
+    }
+
+    // Find the user in the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.noti.push(notif);
+
+    // Save the updated user with the new applied job
+    await user.save();
+
+    res.json({
+      success: true,
+      data: user.noti,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error in addNoti" });
+  }
+}
+// Get notifications for a specific user by userId
+async function getNotifications(req, res) {
+  console.log("In GetNoti");
+  try {
+    const userId = req.user._id;
+    console.log(userId);
+    // Find the user by userId
+    const user = await User.findById(userId);
+    console.log(user);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Extract the 'Noti' array from the user document
+    const notifications = user.noti;
+    console.log(notifications);
+    // Return the notifications
+    res.json({ success: true, data: notifications });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+// Clear the Noti array for a specific user by userId
+async function clearNotifications(req, res) {
+  try {
+    const userId = req.user._id;
+
+    // Find the user by userId
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update the user's Noti array to an empty array
+    user.noti = [];
+
+    // Save the updated user document
+    await user.save();
+
+    res.json({ success: true, message: "Notifications cleared successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
 module.exports = {
   getUserDetails,
   updateUser,
@@ -193,4 +285,8 @@ module.exports = {
   getUserByEmail,
   editProfile,
   changeEmail,
+  getAllUsers,
+  addNotification,
+  getNotifications,
+  clearNotifications,
 };

@@ -15,14 +15,21 @@ const cvsFolderPath = path.join(__dirname, "uploads", "cvs");
 async function signup(req, res) {
   console.log("INSIDE SIGNUP");
   const { email, password } = req.body;
+
   const existingEmail = await User.findByEmail(email);
   if (existingEmail) {
     return res.status(409).send({ message: "Email already exists" });
   }
+  if (password.length < 6) {
+    console.log("in here pw short");
+    return res
+      .status(409)
+      .send({ message: "Password must be atleast 6 character long" });
+  }
   try {
     // Validate inputs
     if (!password || !email) {
-      return res.status(400).send({ message: "Fields cannot be left empty" });
+      return res.status(409).send({ message: "Fields cannot be left empty" });
     }
 
     // Check if the email is already taken
@@ -56,7 +63,7 @@ async function login(req, res) {
 
     // Validate inputs
     if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+      return res.status(401).json({ error: "Fields cannot be left empty" });
     }
 
     // Find the user by email
@@ -71,8 +78,10 @@ async function login(req, res) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Create and sign a JWT token
-    const token = jwt.sign({ userId: user._id }, secretKey);
+    // Create and sign a JWT token with 30 days expiration
+    const token = jwt.sign({ userId: user._id }, secretKey, {
+      expiresIn: "30d", // 30 days expiration
+    });
 
     // Set the token as a cookie in the response
     res.cookie("token", token, { httpOnly: true });
@@ -133,6 +142,7 @@ async function getImage(req, res) {
 }
 
 async function getCv(req, res) {
+  console.log("in get CV");
   try {
     const fileName = req.params.fileName;
     const filePath = path.resolve(cvsFolderPath, fileName);
@@ -200,8 +210,24 @@ async function changePassword(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
-
-
+// Controller function to delete a user
+async function deleteUser(req, res) {
+    try {
+      const userId = req.params.userId;
+  
+      // Delete the user from the database
+      const deletedUser = await User.findByIdAndDelete(userId);
+  
+      if (!deletedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      res.status(200).json({ success: true, message: 'User deleted successfully' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
 module.exports = {
   signup,
   login,
@@ -209,4 +235,5 @@ module.exports = {
   getImage,
   getCv,
   changePassword,
+  deleteUser
 };

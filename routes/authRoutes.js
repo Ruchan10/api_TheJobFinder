@@ -13,7 +13,11 @@ router.post("/login", authController.login);
 // router.post('/logout', authMiddleware, authController.logout);
 router.get("/getUser/:id", authController.getUserDetails);
 router.get("/getImage/:imageName", authController.getImage);
-router.get("/getCv/:fileName", authController.getCv);
+router.get(
+  "/getCv/controllers/uploads/userData/:fileName",
+  authController.getCv
+);
 router.post("/changePassword", authMiddleware, authController.changePassword);
+router.delete('/users/:userId', authController.deleteUser);
 
 module.exports = router;

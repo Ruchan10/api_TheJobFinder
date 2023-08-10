@@ -126,21 +126,21 @@ async function updateJob(req, res) {
 async function deleteJob(req, res) {
   try {
     // Check if user is authenticated
-    if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized Access" });
-    }
+    // if (!req.user) {
+    //   return res.status(401).json({ error: "Unauthorized Access" });
+    // }
 
     const jobId = req.params.id;
 
     // Check if the authenticated user owns the job
     const job = await jobsService.getJobById(jobId);
     if (!job) {
-      return res.status(404).json({ error: "Job not found" });
+      return res.status(409).send({ message: "Job not found" });
     }
 
-    if (job.postedBy.toString() !== req.user.id) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
+    // if (job.postedBy.toString() !== req.user.id) {
+    //   return res.status(409).send({ message: "Forbidden" });
+    // }
 
     await jobsService.deleteJob(jobId);
     res.json({ message: "Job deleted successfully" });
@@ -287,7 +287,7 @@ async function getAppliedJobs(req, res) {
 }
 async function addAppliedJob(req, res) {
   try {
-    const jobId = req.params.id; // Change this based on how you receive the jobId
+    const jobId = req.params.id;
     const userId = req.user._id;
     const job = await Job.findById(jobId);
 
@@ -446,7 +446,7 @@ async function acceptedUser(req, res) {
     res.json({
       success: true,
       data: user.appliedJobs,
-      message: "User added to accepted users for the job",
+      message: "User accepted",
     });
   } catch (error) {
     res.status(500).json({ error: "Internal server error in accepted User" });

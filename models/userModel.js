@@ -32,7 +32,12 @@ const userSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
   },
-
+  noti: [
+    {
+      type: String,
+      ref: "Job",
+    },
+  ],
 });
 // Function to add a job to the user's applied jobs list
 userSchema.methods.addAppliedJob = function (jobId) {

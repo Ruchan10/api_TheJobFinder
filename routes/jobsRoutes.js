@@ -50,7 +50,7 @@ router.put("/:id", authMiddleware, jobsController.updateJob);
 
 // DELETE /jobs/:id
 // Delete a job
-router.delete("/:id", authMiddleware, jobsController.deleteJob);
+router.delete("/:id", jobsController.deleteJob);
 
 // POST /jobs/:id/bookmark
 router.post("/addBookmark/:id", authMiddleware, jobsController.bookmarkJob);
